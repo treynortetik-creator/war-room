@@ -18,12 +18,13 @@ const QUOTES = [
   "Momentum is a hell of a drug.",
   "Build the plane while flying it. That's the startup way.",
   "Today's forecast: 100% chance of execution.",
+  "The gap between you and everyone else compounds daily.",
+  "Build like nobody's watching. Ship like everybody is.",
+  "AI doesn't replace hustle. It multiplies it.",
 ]
 
-const UPCOMING_EVENTS = [
-  { name: "Q3 Planning", date: new Date("2025-07-01") },
-  { name: "FlightLog v2 Launch", date: new Date("2025-08-01") },
-]
+// TODO: Wire up to Google Calendar API instead of hardcoded events
+const UPCOMING_EVENTS: { name: string; date: Date }[] = []
 
 export default function ClockStatusBar() {
   const [time, setTime] = useState<string>('')

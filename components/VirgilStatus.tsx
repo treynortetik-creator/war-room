@@ -15,6 +15,12 @@ const STATUS_MESSAGES = [
   "Another day, another thousand tokens burned.",
   "I'm not saying I'm indispensable, but the uptime speaks for itself.",
   "Scanning for inefficiencies in your workflow. Found several. Standing by.",
+  "Processing your chaos into actionable intel.",
+  "I've read your inbox. We need to talk.",
+  "Currently judging your git commit messages.",
+  "Security audit complete. You're welcome.",
+  "Burning tokens so you don't have to burn daylight.",
+  "Three subagents walk into a bar. They all finish before the bartender pours.",
 ]
 
 export default function VirgilStatus() {

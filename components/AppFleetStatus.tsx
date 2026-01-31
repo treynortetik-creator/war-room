@@ -11,11 +11,11 @@ interface AppInfo {
 const APPS: AppInfo[] = [
   { name: 'FlightLog', status: 'live', statusLabel: 'Live', lastDeploy: 'Jun 2025', icon: '✈️' },
   { name: 'Deckhand', status: 'development', statusLabel: 'Development', lastDeploy: 'In progress', icon: '⚓' },
-  { name: 'SITREP', status: 'live', statusLabel: 'Live', lastDeploy: 'Jun 2025', icon: '📋' },
-  { name: 'Quartermaster', status: 'prd', statusLabel: 'PRD Complete', icon: '📦' },
-  { name: 'Sentinel', status: 'planned', statusLabel: 'Planned', icon: '🛡️' },
+  { name: 'SITREP', status: 'live', statusLabel: 'Live', lastDeploy: 'Jan 2026', icon: '📋' },
+  { name: 'CompetitorRadar', status: 'prd', statusLabel: 'PRD Complete', icon: '🔍' },
   { name: 'Still', status: 'live', statusLabel: 'Live', lastDeploy: 'May 2025', icon: '🥃' },
   { name: 'Counting House', status: 'development', statusLabel: 'Development', lastDeploy: 'In progress', icon: '💰' },
+  { name: 'WarRoom', status: 'development', statusLabel: 'Development', icon: '🏰' },
 ]
 
 const statusDotClass: Record<string, string> = {

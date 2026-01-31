@@ -7,14 +7,23 @@ import { requireAuth } from '@/lib/api-auth'
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-function getVirgilStats() {
+// In-memory store for remotely-posted stats (Railway deployment)
+let remoteStats: {
+  tasksToday: number
+  subagentsSpawned: number
+  uptime: string
+  lastUpdated: number
+} | null = null
+
+function getLocalVirgilStats() {
   const sessionsDir = join(homedir(), '.clawdbot', 'agents', 'main', 'sessions')
 
   let files: string[]
   try {
     files = readdirSync(sessionsDir)
   } catch {
-    return { tasksToday: 0, subagentsSpawned: 0, uptimeStr: '0h 0m' }
+    // Sessions directory doesn't exist — not a local deployment
+    return null
   }
 
   const now = new Date()
@@ -71,21 +80,74 @@ export async function GET(request: NextRequest) {
   if (authError) return authError
 
   try {
-    const stats = getVirgilStats()
+    // Try local sessions directory first
+    const localStats = getLocalVirgilStats()
 
+    if (localStats) {
+      return NextResponse.json({
+        status: 'Active',
+        tasksToday: localStats.tasksToday,
+        subagentsSpawned: localStats.subagentsSpawned,
+        uptime: localStats.uptimeStr,
+        source: 'local',
+      })
+    }
+
+    // Remote deployment: use POSTed stats if available
+    if (remoteStats) {
+      const ageMin = Math.round((Date.now() - remoteStats.lastUpdated) / 60000)
+      const stale = ageMin > 30
+
+      return NextResponse.json({
+        status: stale ? 'Stale' : 'Remote',
+        tasksToday: remoteStats.tasksToday,
+        subagentsSpawned: remoteStats.subagentsSpawned,
+        uptime: remoteStats.uptime,
+        lastUpdated: new Date(remoteStats.lastUpdated).toISOString(),
+        source: 'remote',
+      })
+    }
+
+    // No local sessions, no remote stats posted
     return NextResponse.json({
-      status: 'Active',
-      tasksToday: stats.tasksToday,
-      subagentsSpawned: stats.subagentsSpawned,
-      uptime: stats.uptimeStr,
+      status: 'Remote',
+      tasksToday: 0,
+      subagentsSpawned: 0,
+      uptime: '—',
+      source: 'remote',
     })
   } catch (err) {
     console.error('Virgil API error:', err)
     return NextResponse.json({
-      status: 'Active',
+      status: 'Error',
       tasksToday: 0,
       subagentsSpawned: 0,
       uptime: '0h 0m',
     })
+  }
+}
+
+/**
+ * POST handler: Clawdbot can push stats from the local machine to the deployed instance.
+ * Body: { tasksToday: number, subagentsSpawned: number, uptime: string }
+ */
+export async function POST(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
+  try {
+    const body = await request.json()
+
+    remoteStats = {
+      tasksToday: typeof body.tasksToday === 'number' ? body.tasksToday : 0,
+      subagentsSpawned: typeof body.subagentsSpawned === 'number' ? body.subagentsSpawned : 0,
+      uptime: typeof body.uptime === 'string' ? body.uptime : '0h 0m',
+      lastUpdated: Date.now(),
+    }
+
+    return NextResponse.json({ ok: true, stats: remoteStats })
+  } catch (err) {
+    console.error('Virgil POST error:', err)
+    return NextResponse.json({ error: 'Invalid body' }, { status: 400 })
   }
 }

@@ -42,7 +42,7 @@ export default function ClockStatusBar() {
       const seconds = mst.getSeconds().toString().padStart(2, '0')
       setTime(`${hours}:${minutes}:${seconds}`)
       
-      const dateStr = mst.toLocaleDateString('en-US', {
+      const dateStr = now.toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import ClockStatusBar from '@/components/ClockStatusBar'
 import MissionBrief from '@/components/MissionBrief'
 import ActiveOps from '@/components/ActiveOps'
@@ -31,6 +32,12 @@ export default function WarRoom() {
   const [briefs, setBriefs] = useState<Brief[]>([])
   const [loading, setLoading] = useState(true)
   const [showFitness, setShowFitness] = useState(false)
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.replace('/login')
+  }
 
   useEffect(() => {
     const fetchData = async () => {
@@ -120,10 +127,17 @@ export default function WarRoom() {
       </div>
 
       {/* Classification footer */}
-      <div className="mt-4 md:mt-6 text-center opacity-0 animate-fade-in-delay-5">
+      <div className="mt-4 md:mt-6 text-center opacity-0 animate-fade-in-delay-5 flex items-center justify-center gap-4">
         <p className="text-war-muted text-xs font-mono tracking-[0.3em] uppercase">
           &#9646; Classification: Eyes Only — Tetik, T. &#9646;
         </p>
+        <button
+          onClick={handleLogout}
+          className="text-war-muted/40 hover:text-war-red text-[10px] font-mono tracking-wider uppercase transition-colors duration-300"
+          title="End session"
+        >
+          [logout]
+        </button>
       </div>
     </main>
   )

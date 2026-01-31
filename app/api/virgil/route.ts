@@ -1,12 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { readdirSync, statSync } from 'fs'
 import { join } from 'path'
 import { homedir } from 'os'
+import { requireAuth } from '@/lib/api-auth'
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-function getSessionStats() {
+function getVirgilStats() {
   const sessionsDir = join(homedir(), '.clawdbot', 'agents', 'main', 'sessions')
 
   let files: string[]
@@ -44,7 +45,6 @@ function getSessionStats() {
     }
   }
 
-  // Count deleted sessions from today for subagent estimate
   for (const file of files) {
     if (!file.includes('.deleted.')) continue
 
@@ -78,9 +78,12 @@ function getSessionStats() {
   return { tasksToday, subagentsSpawned, uptimeStr }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
-    const stats = getSessionStats()
+    const stats = getVirgilStats()
 
     return NextResponse.json({
       status: 'Active',

@@ -1,10 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/api-auth'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
+    const apiKey = process.env.SITREP_API_KEY
+    if (!apiKey) {
+      return NextResponse.json([], { status: 200 })
+    }
+
     const res = await fetch('https://mission-control-production-bc9a.up.railway.app/api/tasks', {
       headers: {
-        'x-api-key': process.env.SITREP_API_KEY || 'M2icO3BeTJP9uc9oVpjJ16qaW1UlcI0w',
+        'x-api-key': apiKey,
       },
       next: { revalidate: 300 },
     })

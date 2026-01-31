@@ -1,6 +1,7 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { execFileSync } from 'child_process'
 import { existsSync } from 'fs'
+import { requireAuth } from '@/lib/api-auth'
 
 interface GogEvent {
   summary?: string
@@ -15,6 +16,13 @@ interface CalendarEvent {
   title: string
   duration: number
   endTime: string
+}
+
+function sanitizeString(str: string): string {
+  return str.replace(/[<>&"']/g, c => {
+    const map: Record<string, string> = { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#x27;' }
+    return map[c] || c
+  })
 }
 
 function parseGogEvents(events: GogEvent[]): CalendarEvent[] {
@@ -43,7 +51,7 @@ function parseGogEvents(events: GogEvent[]): CalendarEvent[] {
       return {
         time,
         endTime,
-        title: e.summary!,
+        title: sanitizeString(e.summary!),
         duration: durationMin,
       }
     })
@@ -53,21 +61,29 @@ function parseGogEvents(events: GogEvent[]): CalendarEvent[] {
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authError = requireAuth(request)
+  if (authError) return authError
+
   try {
+    // Only allow known gog binary paths — no user input involved
     const gogPaths = ['/usr/local/bin/gog', '/opt/homebrew/bin/gog']
     const gogPath = gogPaths.find(p => existsSync(p))
     if (!gogPath) {
       return NextResponse.json({ events: [] })
     }
 
+    // execFileSync with array args — safe from shell injection
     const output = execFileSync(gogPath, ['calendar', 'list', '--from', 'today', '--to', 'today', '--json'], {
       timeout: 10000,
       encoding: 'utf-8',
     })
 
     const data = JSON.parse(output)
-    const events = parseGogEvents(data.events || [])
+    if (!data || typeof data !== 'object') {
+      return NextResponse.json({ events: [] })
+    }
+    const events = parseGogEvents(Array.isArray(data.events) ? data.events : [])
 
     return NextResponse.json({ events })
   } catch (err) {

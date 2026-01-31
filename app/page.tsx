@@ -40,11 +40,11 @@ export default function WarRoom() {
         
         if (tasksRes.ok) {
           const tasksData = await tasksRes.json()
-          setTasks(tasksData)
+          setTasks(Array.isArray(tasksData) ? tasksData : tasksData.tasks || [])
         }
         if (briefsRes.ok) {
           const briefsData = await briefsRes.json()
-          setBriefs(briefsData)
+          setBriefs(Array.isArray(briefsData) ? briefsData : briefsData.briefs || [])
         }
       } catch (err) {
         console.error('Failed to fetch data:', err)

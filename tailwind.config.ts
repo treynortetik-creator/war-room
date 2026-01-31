@@ -37,6 +37,7 @@ const config: Config = {
         'fade-in-delay-5': 'fadeIn 0.8s ease-out 0.5s forwards',
         'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
         'scanline': 'scanline 8s linear infinite',
+        'pulse-subtle': 'pulseSubtle 2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: {
@@ -50,6 +51,10 @@ const config: Config = {
         scanline: {
           '0%': { transform: 'translateY(-100%)' },
           '100%': { transform: 'translateY(100%)' },
+        },
+        pulseSubtle: {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.6' },
         },
       },
     },

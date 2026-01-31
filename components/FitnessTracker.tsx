@@ -104,7 +104,7 @@ export default function FitnessTracker() {
             <span className="text-[10px] font-mono text-war-muted">{day}</span>
             <button
               onClick={() => toggleDay(i)}
-              className={`workout-box ${completedDays[i] ? 'completed' : ''}`}
+              className={`workout-box min-w-[44px] min-h-[44px] ${completedDays[i] ? 'completed' : ''}`}
             >
               {completedDays[i] && (
                 <span className="text-war-accent text-sm font-bold">✓</span>

@@ -90,7 +90,7 @@ export default function ClockStatusBar() {
 
         {/* Clock */}
         <div className="text-center">
-          <div className="text-3xl md:text-5xl font-mono font-bold text-war-text glow-green tracking-[0.15em]">
+          <div className="text-2xl sm:text-3xl md:text-5xl font-mono font-bold text-war-text glow-green tracking-[0.15em]">
             {time || '--:--:--'}
           </div>
           <div className="text-war-muted text-xs font-mono mt-1 tracking-wider">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const STATUS_MESSAGES = [
   "Standing by for orders, Commander.",
@@ -23,30 +23,83 @@ const STATUS_MESSAGES = [
   "Three subagents walk into a bar. They all finish before the bartender pours.",
 ]
 
+interface VirgilStats {
+  status: string
+  tasksToday: number
+  subagentsSpawned: number
+  uptime: string
+}
+
+function useTypingEffect(text: string, speed: number = 30) {
+  const [displayed, setDisplayed] = useState('')
+  const [isTyping, setIsTyping] = useState(false)
+
+  useEffect(() => {
+    setDisplayed('')
+    setIsTyping(true)
+    let i = 0
+    const interval = setInterval(() => {
+      if (i < text.length) {
+        setDisplayed(text.slice(0, i + 1))
+        i++
+      } else {
+        setIsTyping(false)
+        clearInterval(interval)
+      }
+    }, speed)
+    return () => clearInterval(interval)
+  }, [text, speed])
+
+  return { displayed, isTyping }
+}
+
 export default function VirgilStatus() {
   const [messageIndex, setMessageIndex] = useState(0)
   const [mounted, setMounted] = useState(false)
+  const [stats, setStats] = useState<VirgilStats>({
+    status: 'Active',
+    tasksToday: 0,
+    subagentsSpawned: 0,
+    uptime: '0h 0m',
+  })
+  const hasFetched = useRef(false)
+
+  const { displayed, isTyping } = useTypingEffect(STATUS_MESSAGES[messageIndex])
 
   useEffect(() => {
     setMounted(true)
-    const interval = setInterval(() => {
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/virgil')
+        if (res.ok) {
+          const data = await res.json()
+          setStats(data)
+        }
+      } catch {
+        // keep defaults
+      }
+      hasFetched.current = true
+    }
+
+    fetchStats()
+    const statsInterval = setInterval(fetchStats, 60000)
+
+    const msgInterval = setInterval(() => {
       setMessageIndex(prev => (prev + 1) % STATUS_MESSAGES.length)
     }, 10000)
-    return () => clearInterval(interval)
-  }, [])
 
-  // Simulated stats — in production these would come from Clawdbot's API
-  const stats = {
-    status: 'Active',
-    tasksToday: 12,
-    subagentsSpawned: 3,
-  }
+    return () => {
+      clearInterval(statsInterval)
+      clearInterval(msgInterval)
+    }
+  }, [])
 
   if (!mounted) {
     return (
       <div className="war-panel h-full min-h-[220px]">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-war-accent text-sm">▸</span>
+          <span className="text-war-accent text-sm">&#9656;</span>
           <h2 className="text-sm font-bold tracking-[0.15em] uppercase text-war-accent font-display">
             Virgil Status
           </h2>
@@ -59,33 +112,37 @@ export default function VirgilStatus() {
     <div className="war-panel h-full min-h-[220px] flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-war-accent text-sm">▸</span>
+          <span className="text-war-accent text-sm">&#9656;</span>
           <h2 className="text-sm font-bold tracking-[0.15em] uppercase text-war-accent font-display">
             Virgil Status
           </h2>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="status-dot status-dot-live" />
+          <span className="status-dot status-dot-live animate-pulse-subtle" />
           <span className="text-xs font-mono text-green-400">{stats.status}</span>
         </div>
       </div>
 
       {/* Stats grid */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="p-3 rounded bg-war-bg/40 border border-war-border/30 text-center">
-          <div className="text-2xl font-mono font-bold text-war-accent">{stats.tasksToday}</div>
-          <div className="text-[10px] font-mono text-war-muted mt-1">Tasks Today</div>
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="p-2 rounded bg-war-bg/40 border border-war-border/30 text-center">
+          <div className="text-xl font-mono font-bold text-war-accent">{stats.tasksToday}</div>
+          <div className="text-[10px] font-mono text-war-muted mt-0.5">Tasks</div>
         </div>
-        <div className="p-3 rounded bg-war-bg/40 border border-war-border/30 text-center">
-          <div className="text-2xl font-mono font-bold text-war-accent">{stats.subagentsSpawned}</div>
-          <div className="text-[10px] font-mono text-war-muted mt-1">Subagents</div>
+        <div className="p-2 rounded bg-war-bg/40 border border-war-border/30 text-center">
+          <div className="text-xl font-mono font-bold text-war-accent">{stats.subagentsSpawned}</div>
+          <div className="text-[10px] font-mono text-war-muted mt-0.5">Subagents</div>
+        </div>
+        <div className="p-2 rounded bg-war-bg/40 border border-war-border/30 text-center">
+          <div className="text-xl font-mono font-bold text-war-accent">{stats.uptime}</div>
+          <div className="text-[10px] font-mono text-war-muted mt-0.5">Uptime</div>
         </div>
       </div>
 
-      {/* Status message */}
+      {/* Status message with typing effect */}
       <div className="flex-1 flex items-center justify-center px-2">
-        <p className="text-xs font-mono text-war-muted italic text-center leading-relaxed transition-opacity duration-1000">
-          &ldquo;{STATUS_MESSAGES[messageIndex]}&rdquo;
+        <p className="text-xs font-mono text-war-muted italic text-center leading-relaxed">
+          &ldquo;{displayed}{isTyping && <span className="animate-pulse text-war-accent">|</span>}&rdquo;
         </p>
       </div>
 
@@ -97,7 +154,7 @@ export default function VirgilStatus() {
           rel="noopener noreferrer"
           className="block w-full py-2 rounded bg-war-accent/10 border border-war-accent/30 text-center text-xs font-mono text-war-accent hover:bg-war-accent/20 hover:border-war-accent/50 transition-all duration-300"
         >
-          ◆ Ask Virgil →
+          &#9670; Ask Virgil &#8594;
         </a>
       </div>
     </div>

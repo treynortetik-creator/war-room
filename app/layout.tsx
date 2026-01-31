@@ -2,8 +2,11 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'THE WAR ROOM',
+  title: 'The War Room — Command Center',
   description: 'Personal Command Center — Treynor Tetik',
+  icons: {
+    icon: '/favicon.ico',
+  },
 }
 
 export default function RootLayout({

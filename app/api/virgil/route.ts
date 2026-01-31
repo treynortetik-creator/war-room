@@ -18,14 +18,19 @@ function getVirgilStats() {
   }
 
   const now = new Date()
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  // Use MST timezone for "today" calculation
+  const mstNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Phoenix' }))
+  const todayStart = new Date(mstNow.getFullYear(), mstNow.getMonth(), mstNow.getDate())
+  // Convert back to UTC for comparison
+  const todayStartUTC = new Date(todayStart.getTime() + (now.getTime() - mstNow.getTime()))
 
   let tasksToday = 0
   let subagentsSpawned = 0
   let oldestToday: Date | null = null
 
   for (const file of files) {
-    if (!file.endsWith('.jsonl')) continue
+    // Count both active (.jsonl) and completed/deleted (.jsonl.deleted.*) session files
+    if (!file.includes('.jsonl')) continue
 
     const filePath = join(sessionsDir, file)
     let stat
@@ -36,30 +41,13 @@ function getVirgilStats() {
     }
 
     const created = stat.birthtime
-    if (created >= todayStart) {
+    if (created >= todayStartUTC) {
       tasksToday++
 
-      if (!oldestToday || created < oldestToday) {
-        oldestToday = created
+      // Deleted sessions are completed subagent sessions
+      if (file.includes('.deleted.')) {
+        subagentsSpawned++
       }
-    }
-  }
-
-  for (const file of files) {
-    if (!file.includes('.deleted.')) continue
-
-    const filePath = join(sessionsDir, file)
-    let stat
-    try {
-      stat = statSync(filePath)
-    } catch {
-      continue
-    }
-
-    const created = stat.birthtime
-    if (created >= todayStart) {
-      tasksToday++
-      subagentsSpawned++
 
       if (!oldestToday || created < oldestToday) {
         oldestToday = created

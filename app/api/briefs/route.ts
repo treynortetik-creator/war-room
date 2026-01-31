@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json([], { status: 200 })
     }
 
-    const res = await fetch('https://mission-control-production-bc9a.up.railway.app/api/briefs', {
+    const res = await fetch('https://sitrep.up.railway.app/api/briefs', {
       headers: {
         'x-api-key': apiKey,
       },

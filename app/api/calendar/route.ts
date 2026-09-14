@@ -3,6 +3,8 @@ import { execFileSync } from 'child_process'
 import { existsSync } from 'fs'
 import { requireAuth } from '@/lib/api-auth'
 
+const SITREP_API_URL = process.env.SITREP_API_URL || 'https://sitrep.example.com'
+
 interface GogEvent {
   summary?: string
   start?: { dateTime?: string; date?: string; timeZone?: string }
@@ -67,7 +69,7 @@ async function getCalendarFromBriefs(): Promise<CalendarEvent[]> {
   if (!apiKey) return []
 
   try {
-    const res = await fetch('https://sitrep.up.railway.app/api/briefs', {
+    const res = await fetch(`${SITREP_API_URL}/api/briefs`, {
       headers: { 'x-api-key': apiKey },
       next: { revalidate: 300 },
     })

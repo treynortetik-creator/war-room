@@ -16,7 +16,9 @@ let remoteStats: {
 } | null = null
 
 function getLocalVirgilStats() {
-  const sessionsDir = join(homedir(), '.clawdbot', 'agents', 'main', 'sessions')
+  // Points at the local agent runtime's session-log directory.
+  // Override via env var; default is a generic placeholder path.
+  const sessionsDir = process.env.AGENT_SESSIONS_DIR || join(homedir(), '.agent-runtime', 'sessions')
 
   let files: string[]
   try {

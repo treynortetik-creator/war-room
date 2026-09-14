@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/api-auth'
 
+const SITREP_API_URL = process.env.SITREP_API_URL || 'https://sitrep.example.com'
+
 export const revalidate = 300
 
 export async function GET(request: NextRequest) {
@@ -13,7 +15,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ tasks: [] })
     }
 
-    const res = await fetch('https://sitrep.up.railway.app/api/tasks', {
+    const res = await fetch(`${SITREP_API_URL}/api/tasks`, {
       headers: {
         'x-api-key': apiKey,
       },
